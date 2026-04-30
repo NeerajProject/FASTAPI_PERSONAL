@@ -18,13 +18,21 @@ This repository demonstrates a minimal FastAPI project structure using a reposit
 
 ## Available endpoints
 
-- `POST /api/v1/users` — create user with `username`, `full_name`, and `password`
-- `POST /api/v1/login` — login with `username` and `password`
 - `GET /api/v1/users` — list users
+  - command: `curl -X GET http://127.0.0.1:8000/api/v1/users`
+- `POST /api/v1/users` — create a new user
+  - body: `{ "username": "admin", "full_name": "Admin User", "password": "securepassword" }`
+  - command: `curl -X POST http://127.0.0.1:8000/api/v1/users -H 'Content-Type: application/json' -d '{"username":"admin","full_name":"Admin User","password":"securepassword"}'`
+- `POST /api/v1/login` — login with `username` and `password`
+  - body: `{ "username": "admin", "password": "securepassword" }`
+  - command: `curl -X POST http://127.0.0.1:8000/api/v1/login -H 'Content-Type: application/json' -d '{"username":"admin","password":"securepassword"}'`
 - `GET /api/v1/users/{user_id}` — get user by ID
+  - command: `curl -X GET http://127.0.0.1:8000/api/v1/users/1`
 - `GET /api/v1/food-master` — list food master items
+  - command: `curl -X GET http://127.0.0.1:8000/api/v1/food-master`
 - `POST /api/v1/food-master` — add a food item
   - body: `{ "name": "Apple", "category": "Fruit", "qty_gram": 150.0, "calories": 95.0 }`
+  - command: `curl -X POST http://127.0.0.1:8000/api/v1/food-master -H 'Content-Type: application/json' -d '{"name":"Apple","category":"Fruit","qty_gram":150.0,"calories":95.0}'`
 
 ## Run
 
