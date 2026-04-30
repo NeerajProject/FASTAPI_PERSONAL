@@ -22,9 +22,6 @@ This repository demonstrates a minimal FastAPI project structure using a reposit
 - `POST /api/v1/login` — login with `username` and `password`
 - `GET /api/v1/users` — list users
 - `GET /api/v1/users/{user_id}` — get user by ID
-- `GET /api/v1/expenses` — list expense items
-- `POST /api/v1/expenses` — create a new expense item
-  - body: `{ "id": 3, "description": "Stationery", "amount": 15.75 }`
 - `GET /api/v1/food-master` — list food master items
 - `POST /api/v1/food-master` — add a food item
   - body: `{ "name": "Apple", "category": "Fruit", "qty_gram": 150.0, "calories": 95.0 }`
@@ -49,10 +46,17 @@ SQLALCHEMY_DATABASE_URI=postgresql+psycopg://postgres:password@localhost:5432/fa
 alembic upgrade head
 ```
 
-If the `users` table already exists, stamp the current schema instead of running the migration:
+If the `users` or `food_items` tables already exist, stamp the current schema instead of running the migration:
 
 ```bash
 alembic stamp head
+```
+
+For a single migration covering all current DB models:
+
+```bash
+alembic revision --autogenerate -m "initial schemas"
+alembic upgrade head
 ```
 
 4. Start the server:
