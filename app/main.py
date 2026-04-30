@@ -1,3 +1,18 @@
+"""FastAPI application entrypoint.
+
+Migration commands:
+- Create a new migration:
+  alembic revision --autogenerate -m "add new table"
+- Apply migrations to the database:
+  alembic upgrade head
+- Revert the last migration:
+  alembic downgrade -1
+- Show current revision:
+  alembic current
+
+If the schema already exists and you just need to mark it as migrated:
+  alembic stamp head
+"""
 from fastapi import FastAPI
 
 from app.api.v1.routers import router

@@ -14,12 +14,22 @@ router = APIRouter()
 
 @router.get("/users", response_model=List[UserRead])
 def read_users(db: Session = Depends(get_db)) -> List[UserRead]:
+    """Return all users."""
     service = UserService(UserRepository(db))
     return service.get_users()
 
 
 @router.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(user_in: UserCreate, db: Session = Depends(get_db)) -> UserRead:
+    """Create a new user.
+
+    Request body:
+    {
+      "username": "admin",
+      "full_name": "Admin User",
+      "password": "securepassword"
+    }
+    """
     service = UserService(UserRepository(db))
     if service.get_user_by_username(user_in.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
@@ -28,6 +38,14 @@ def create_user(user_in: UserCreate, db: Session = Depends(get_db)) -> UserRead:
 
 @router.post("/login", response_model=Token)
 def login(user_in: UserLogin, db: Session = Depends(get_db)) -> Token:
+    """Authenticate a user and return a JWT token.
+
+    Request body:
+    {
+      "username": "admin",
+      "password": "securepassword"
+    }
+    """
     service = UserService(UserRepository(db))
     user = service.authenticate_user(user_in.username, user_in.password)
     if not user:
@@ -38,6 +56,7 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)) -> Token:
 
 @router.get("/users/{user_id}", response_model=UserRead)
 def read_user(user_id: int, db: Session = Depends(get_db)) -> UserRead:
+    """Get a single user by ID."""
     service = UserService(UserRepository(db))
     user = service.get_user(user_id)
     if not user:
