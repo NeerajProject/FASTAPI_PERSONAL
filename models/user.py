@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
 
@@ -12,3 +13,5 @@ class User(Base):
     password = Column(String)
     role = Column(String, default="user")
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    diets = relationship("Diet", back_populates="user")
