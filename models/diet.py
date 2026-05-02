@@ -58,3 +58,8 @@ class DailyCalorieLimit(Base):
     start_date = Column(DateTime, default=datetime.utcnow)
     end_date = Column(DateTime, default=datetime.utcnow)
     calorie_limit = Column(Float)
+    state = Column(
+                Enum("draft", "submit", "cancel", name="state_enum"),
+                default="draft",
+                nullable=False
+            )
