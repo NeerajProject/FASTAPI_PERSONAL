@@ -2,8 +2,13 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
+asyncpg
 passlib[argon2]
 python-jose[cryptography]
 python-multipart
 pydantic[email]
 python-dotenv
+click
+pytest
+pytest-asyncio
+httpx
