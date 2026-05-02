@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Depends
 from database import get_db,engine
 from sqlalchemy.orm import Session
 import model
 from pydantic import BaseModel
+from datetime import date   # ✅ import this
 
 app = FastAPI()
 
@@ -10,7 +11,7 @@ app = FastAPI()
 class BookCreate(BaseModel):
     title: str
     author: str
-    published_date: Date
+    published_date: date
     isbn: str
 
 @app.post("/books/")
