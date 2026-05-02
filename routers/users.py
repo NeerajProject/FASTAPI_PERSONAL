@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from models.user import User
 from schemas.user import UserCreate
 from database import get_db
-# from auth import utils
 from jose import jwt
 from jose.exceptions import JWTError
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -29,10 +32,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 
-SECRET_KEY = "NJ69"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 router = APIRouter(
     prefix="/users",
@@ -85,7 +88,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    hashed_password = utils.hash_password(user.password)
+    hashed_password = hash_password(user.password)
     new_user = User(username=user.username, password=hashed_password)
     db.add(new_user)
     db.commit()
@@ -99,7 +102,7 @@ async def login(
     db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not utils.verify_password(form_data.password, user.password):
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
