@@ -49,15 +49,20 @@ async def delete_book(book_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Book with ID {book_id} deleted successfully."}
 
- @app.put("/books/{book_id}")
+
+@app.put("/books/{book_id}")
 async def update_book(book_id: int, book: BookCreate, db: Session = Depends(get_db)):
     db_book = db.query(model.Book).filter(model.Book.id == book_id).first()
+
     if db_book is None:
-        return {"message": "Book not found"}
+        raise HTTPException(status_code=404, detail="Book not found")  # ✅ proper error
+
     db_book.title = book.title
     db_book.author = book.author
     db_book.published_date = book.published_date
     db_book.isbn = book.isbn
+
     db.commit()
     db.refresh(db_book)
-    return {"message": f"Book with ID {book_id} updated successfully."}   
+
+    return db_book   # ✅ return updated object
