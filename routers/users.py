@@ -85,6 +85,7 @@ def require_role(roles: list[str]):
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
+    print(">>>>>>>>>>", user.username, user.password)
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
