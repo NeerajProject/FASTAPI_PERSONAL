@@ -7,8 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from models.user import User
-from schemas.user import UserCreate, UserLogin
-from database import get_db
+from schemas.user import UserCreate, UserLogin, UserResponse
+from database import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from repositories.user_repository import UserRepository
 from jose import jwt
 from jose.exceptions import JWTError
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -50,9 +52,9 @@ def create_access_token(data: dict) -> str:
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -66,7 +68,9 @@ def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = db.query(User).filter(User.username == username).first()
+    
+    repo = UserRepository(db)
+    user = await repo.get_by_username(username)
     if user is None:
         raise credentials_exception
     return user
@@ -75,25 +79,33 @@ def get_current_user(
 
 
 @router.post("/register")
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    print(">>>>>>>>>>", user.username, user.password)
-    db_user = db.query(User).filter(User.username == user.username).first()
+async def register(user: UserCreate, db: AsyncSession = Depends(get_async_db)):
+    repo = UserRepository(db)
+    db_user = await repo.get_by_username(user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
+    
     hashed_password = hash_password(user.password)
+    new_user_data = {"username": user.username, "password": hashed_password}
+    
+    # We can't use repo.create(new_user_data) directly because the BaseRepository 
+    # might expect a different format or the model might have relationships.
+    # But UserRepository extends BaseRepository[User].
+    
     new_user = User(username=user.username, password=hashed_password)
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
     return {"message": f"User {new_user.username} created successfully."}
 
 
 @router.post("/login")
-def login(
+async def login(
     login_data: UserLogin,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
-    user = db.query(User).filter(User.username == login_data.username).first()
+    repo = UserRepository(db)
+    user = await repo.get_by_username(login_data.username)
     if not user or not verify_password(login_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,3 +128,11 @@ def profile(current_user: User = Depends(get_current_user)):
 @router.get("/dashboard")
 def user_dashboard(current_user: User = Depends(get_current_user)):
     return {"message": f"Welcome to the dashboard, {current_user.username}!"}
+
+@router.get("/", response_model=list[UserResponse])
+async def get_all_users(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user),
+):
+    repo = UserRepository(db)
+    return await repo.get_all()
