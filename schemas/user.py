@@ -5,9 +5,7 @@ from typing import Optional
 
 class UserCreate(BaseModel):
     username: str
-    email: EmailStr
     password: str
-    role: str = "user"
 
 
 class UserLogin(BaseModel):
@@ -18,8 +16,6 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     username: str
-    email: str
-    role: str
     created_at: datetime
 
     class Config:

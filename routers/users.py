@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from models.user import User
-from schemas.user import UserCreate
+from schemas.user import UserCreate, UserLogin
 from database import get_db
 from jose import jwt
 from jose.exceptions import JWTError
@@ -72,15 +72,6 @@ def get_current_user(
     return user
 
 
-def require_role(roles: list[str]):
-    def role_checker(current_user: User = Depends(get_current_user)):
-        if current_user.role not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource",
-            )
-        return current_user
-    return role_checker
 
 
 @router.post("/register")
@@ -99,11 +90,11 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    login_data: UserLogin,
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.password):
+    user = db.query(User).filter(User.username == login_data.username).first()
+    if not user or not verify_password(login_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
@@ -118,10 +109,10 @@ def protected_route(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/profile")
-def profile(current_user: User = Depends(require_role(["user", "admin"]))):
+def profile(current_user: User = Depends(get_current_user)):
     return {"message": f"Hello {current_user.username}, this is your profile!"}
 
 
 @router.get("/dashboard")
-def user_dashboard(current_user: User = Depends(require_role(["user"]))):
+def user_dashboard(current_user: User = Depends(get_current_user)):
     return {"message": f"Welcome to the dashboard, {current_user.username}!"}
